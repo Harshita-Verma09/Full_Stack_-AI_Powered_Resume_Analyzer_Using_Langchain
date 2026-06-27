@@ -2,9 +2,6 @@
 
 A resume analysis application that compares a PDF resume against a job description using AI. The frontend lets users upload their resume and paste the job description, while the backend extracts text, analyzes the resume with LangChain + GROQ, and returns a structured match report.
 
-## Name
-
-Resume Analyzer
 
 ## Features
 
@@ -94,15 +91,62 @@ This app is designed for:
 
 ## System Design / Workflow
 
-1. User uploads resume and provides job details
-2. React frontend builds multipart form data
-3. Request goes to Express backend route `/api/analyze`
-4. `multer` parses the uploaded PDF file into memory
-5. `pdfService` extracts resume text
-6. `langchainService` invokes the GROQ model with a strict JSON prompt
-7. Backend validates the returned JSON structure
-8. Backend responds with structured analysis results
-9. Frontend renders the analysis panel
+The system is split into a React frontend and an Express backend. The frontend collects the resume PDF and job details, then sends them to the backend. The backend extracts text, calls the AI model, validates the response, and returns structured analysis data.
+
+### Workflow Diagram
+
+```mermaid
+flowchart TD
+    A[User] -->|Upload resume + job data| B[React Frontend]
+    B -->|POST /api/analyze| C[Express Backend]
+    C --> D[multer file parser]
+    D --> E[pdfService]
+    E --> F[langchainService]
+    F --> G[GROQ LLM]
+    G --> F
+    F --> H[Validate JSON output]
+    H --> I[Respond to frontend]
+    I --> B
+    B --> J[Render results panel]
+```
+
+### Architecture Diagram
+
+```mermaid
+flowchart LR
+    subgraph Frontend
+      FE[React + Vite]
+      API[Axios API client]
+    end
+
+    subgraph Backend
+      BE[Express API]
+      MUL[Multer]
+      PDF[pdfService]
+      AI[langchainService]
+      DB[MongoDB / Mongoose]
+    end
+
+    FE -->|Upload PDF + job data| API
+    API -->|POST /api/analyze| BE
+    BE --> MUL
+    MUL --> PDF
+    PDF --> AI
+    AI -->|analysis result| BE
+    BE --> FE
+    BE -->|optional persistence| DB
+```
+
+### Detailed workflow
+
+1. The user provides the resume PDF and job description in the frontend.
+2. The frontend sends a `multipart/form-data` request to `/api/analyze` using Axios.
+3. The backend route receives the request and `multer` extracts the uploaded file into memory.
+4. The file buffer is passed to `pdfService`, which extracts plain text from the PDF.
+5. `langchainService` receives resume text, job title, and job description, then builds a strict JSON prompt.
+6. The GROQ model is invoked and returns a JSON response with score, matched skills, missing skills, improvements, and summary.
+7. The backend validates the JSON structure and returns the parsed object to the frontend.
+8. The frontend displays the analysis results in the results panel for the user.
 
 ## Folder Structure
 
@@ -153,4 +197,3 @@ This app is designed for:
 
 - The backend currently includes stubbed history endpoints (`/api/analyze/history`, `/api/analyze/:id`) but returns empty arrays.
 - The AI response is validated to ensure it contains exactly the expected JSON fields.
-
