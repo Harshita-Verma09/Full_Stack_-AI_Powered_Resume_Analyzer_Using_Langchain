@@ -1,4 +1,4 @@
-# Resume Analyzer Using AI 
+# Resume Analyzer Using AI. 
 
 A resume analysis application that compares a PDF resume against a job description using AI. The frontend lets users upload their resume and paste the job description, while the backend extracts text, analyzes the resume with LangChain + GROQ, and returns a structured match report.
 
